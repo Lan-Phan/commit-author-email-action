@@ -2,10 +2,10 @@ name: 'Check Email of Commit Author and Committer'
 description: 'Checks the email of the commit author and committer'
 inputs:
   author_email_domain:
-    description: 'domain of the author\'s emails'
+    description: 'domain of the author emails'
     required: true
   committer_email_domain:
-    description: 'domain of the committer\'s emails'
+    description: 'domain of the committer emails'
     required: true
   github_token:
     description: 'GitHub token'
