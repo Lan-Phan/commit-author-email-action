@@ -1,8 +1,8 @@
 import { context, getOctokit } from '@actions/github';
-import { getInput } from '@actions/core';
 
 import { INPUT } from 'constants/io';
 import { TListCommitsResponse } from 'types/octokit';
+import { getInput } from '@actions/core';
 
 const token = getInput(INPUT.GITHUB_TOKEN, { required: true });
 const octokit = getOctokit(token);

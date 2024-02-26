@@ -1,10 +1,10 @@
-import { getInput, setOutput, setFailed, info, warning } from '@actions/core';
-
 import { INPUT, OUTPUT } from 'constants/io';
-import { GITHUB_EVENT } from 'constants/env';
+import { getInput, info, setFailed, setOutput, warning } from '@actions/core';
+
 import { FALSE } from 'constants/boolean';
-import getCommitEmails from 'helpers/getCommitEmails';
+import { GITHUB_EVENT } from 'constants/env';
 import filterInvalidEmails from 'helpers/filterInvalidEmails';
+import getCommitEmails from 'helpers/getCommitEmails';
 
 async function checkEmail(): Promise<void> {
   const authorEmailDomainInput = getInput(INPUT.AUTHOR_EMAIL_DOMAIN, { required: true });
@@ -15,7 +15,7 @@ async function checkEmail(): Promise<void> {
   const commitEmails = await getCommitEmails(GITHUB_EVENT);
 
   if (!commitEmails) {
-    return warning('Could not found emails');
+    return warning('Could not find any emails');
   }
   info(`Emails to check, author emails: ${commitEmails[0]}`);
   info(`Emails to check, committer emails: ${commitEmails[1]}`);
@@ -23,14 +23,22 @@ async function checkEmail(): Promise<void> {
   const invalidAuthorEmails = filterInvalidEmails(authorEmailDomainInput, commitEmails[0]);
   const invalidCommitterEmails = filterInvalidEmails(committerEmailDomainInput, commitEmails[1]);
 
-  handleSetOutput(
-    [invalidAuthorEmails, invalidCommitterEmails],
-    [authorEmailDomainInput, committerEmailDomainInput]
-  );
+  handleSetOutput({ invalidAuthorEmails, invalidCommitterEmails }, [
+    authorEmailDomainInput,
+    committerEmailDomainInput,
+  ]);
 }
 
-function handleSetOutput(invalidEmails: string[][], emailDomainInput: string[]): void {
-  const isValid = invalidEmails[0].length === 0 && invalidEmails[1].length === 0;
+type InvalidEmails = {
+  invalidAuthorEmails: string[];
+  invalidCommitterEmails: string[];
+};
+
+function handleSetOutput(
+  { invalidAuthorEmails, invalidCommitterEmails }: InvalidEmails,
+  emailDomainInput: string[]
+): void {
+  const isValid = invalidAuthorEmails.length === 0 && invalidCommitterEmails.length === 0;
 
   setOutput(OUTPUT.IS_VALID, isValid);
 
@@ -39,7 +47,14 @@ function handleSetOutput(invalidEmails: string[][], emailDomainInput: string[]):
   }
 
   const errorOnFail = getInput(INPUT.ERROR_ON_FAIL);
-  const errorMessage = `Invalid emails found. Invalid author emails: ${invalidEmails[0]}, it should be end with ${emailDomainInput[0]}. Invalid committer emails: ${invalidEmails[1]}, it should be end with ${emailDomainInput[1]}`;
+  const errorMessage = `
+      E-mail addresses with invalid domains found.
+
+      Invalid author email: ${invalidAuthorEmails} 
+      Invalid committer email: ${invalidCommitterEmails}
+
+      Valid domains are: ${emailDomainInput[0]}.
+      Tip: to set a new email, try running \`git config --add user.email Jane.Doe@your-domain.com\``;
 
   if (errorOnFail === FALSE) {
     warning(errorMessage);

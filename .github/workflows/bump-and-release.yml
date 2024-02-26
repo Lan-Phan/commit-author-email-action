@@ -2,7 +2,7 @@ name: Bump and Release
 
 on:
   push:
-    branches: [ master ]
+    branches: [master]
 
 env:
   NODE_VERSION: 16.x
